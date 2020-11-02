@@ -635,7 +635,7 @@ class Manager implements ICommentsManager {
 	 */
 	public function getNumberOfUnreadCommentsForObjects(string $objectType, array $objectIds, IUser $user, $verb = ''): array {
 		$query = $this->dbConn->getQueryBuilder();
-		$query->select('c.object_id', $query->func()->count('*', 'num_comments'))
+		$query->select('c.object_id', $query->func()->count('c.id', 'num_comments'))
 			->from('comments', 'c')
 			->leftJoin('c', 'comments_read_markers', 'm', $query->expr()->andX(
 				$query->expr()->eq('m.user_id', $query->createNamedParameter($user->getUID())),
@@ -644,7 +644,10 @@ class Manager implements ICommentsManager {
 			))
 			->where($query->expr()->eq('c.object_type', $query->createNamedParameter($objectType)))
 			->andWhere($query->expr()->in('c.object_id', $query->createNamedParameter($objectIds, IQueryBuilder::PARAM_STR_ARRAY)))
-			->andWhere($query->expr()->gt('c.creation_timestamp', 'm.marker_datetime'))
+			->andWhere($query->expr()->orX(
+				$query->expr()->gt('c.creation_timestamp', 'm.marker_datetime')),
+				$query->expr()->isNull('m.marker_datetime')
+			)
 			->groupBy('c.object_id');
 
 		if ($verb !== '') {
