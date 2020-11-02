@@ -645,9 +645,9 @@ class Manager implements ICommentsManager {
 			->where($query->expr()->eq('c.object_type', $query->createNamedParameter($objectType)))
 			->andWhere($query->expr()->in('c.object_id', $query->createNamedParameter($objectIds, IQueryBuilder::PARAM_STR_ARRAY)))
 			->andWhere($query->expr()->orX(
-				$query->expr()->gt('c.creation_timestamp', 'm.marker_datetime')),
+				$query->expr()->gt('c.creation_timestamp', 'm.marker_datetime'),
 				$query->expr()->isNull('m.marker_datetime')
-			)
+			))
 			->groupBy('c.object_id');
 
 		if ($verb !== '') {
